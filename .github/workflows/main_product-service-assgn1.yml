@@ -20,15 +20,18 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.10'  # Ensure this matches your app's Python version
 
       - name: Create and start virtual environment
         run: |
           python -m venv venv
-          source venv/bin/activate
+          echo "VIRTUAL_ENV=$(pwd)/venv" >> $GITHUB_ENV
+          echo "PATH=$(pwd)/venv/bin:$PATH" >> $GITHUB_ENV
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -41,7 +44,7 @@ jobs:
           name: python-app
           path: |
             release.zip
-            !venv/
+            !venv/  # Exclude the virtual environment
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,7 +53,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -61,7 +64,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -75,4 +77,4 @@ jobs:
         with:
           app-name: 'product-service-assgn1'
           slot-name: 'Production'
-          
+          # Ensure the correct runtime stack for Python is specified in your Azure Web App settings
